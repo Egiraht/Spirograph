@@ -281,8 +281,8 @@
               <Setter TargetName="GradientCheckboxBorder" Property="Background">
                 <Setter.Value>
                   <RadialGradientBrush>
-                    <GradientStop Offset="0.0" Color="Gold" />
-                    <GradientStop Offset="0.5" Color="DarkGoldenrod" />
+                    <GradientStop Offset="0.25" Color="Gold" />
+                    <GradientStop Offset="0.75" Color="DarkGoldenrod" />
                     <GradientStop Offset="1.0" Color="Gray" />
                   </RadialGradientBrush>
                 </Setter.Value>

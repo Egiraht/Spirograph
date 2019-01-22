@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Spirograph"
         mc:Ignorable="d"
-        Title="Spirograph" Background="Black" Width="640" Height="480" MinWidth="640" MinHeight="480" WindowStartupLocation="CenterScreen">
+        Title="Spirograph" Background="Black" Width="800" Height="620" MinWidth="800" MinHeight="620" WindowStartupLocation="CenterScreen">
+
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*" />
@@ -31,6 +32,8 @@
           <RowDefinition />
           <RowDefinition />
           <RowDefinition />
+          <RowDefinition />
+          <RowDefinition />
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -39,38 +42,55 @@
         </Grid.ColumnDefinitions>
 
         <Label Grid.Row="0" Grid.Column="0" Content="Trace length:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceLength}" VerticalAlignment="Center"
-                 KeyDown="TextBox_OnKeyDown" />
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceLength, Mode=TwoWay}"
+                 VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown" />
 
         <Label Grid.Row="1" Grid.Column="0" Content="Trace thickness:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceThickness}" VerticalAlignment="Center"
-                 KeyDown="TextBox_OnKeyDown" />
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceThickness, Mode=TwoWay}"
+                 VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown" />
 
         <Label Grid.Row="2" Grid.Column="0" Content="Trace color:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceColor}" VerticalAlignment="Center"
-                 KeyDown="TextBox_OnKeyDown" />
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceColor, Mode=TwoWay}"
+                 VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown" />
 
-        <Separator Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" DockPanel.Dock="Top" />
+        <Label Grid.Row="3" Grid.Column="0" Content="Show drive circles:" VerticalAlignment="Center" />
+        <CheckBox Grid.Row="3" Grid.Column="1" IsChecked="{Binding ElementName=SpirographWindow, Path=Trace.ShowDriveCircles, Mode=TwoWay}"
+                 VerticalAlignment="Center" />
 
-        <Label Grid.Row="4" Grid.Column="0" Content="Frequency:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Frequency)}"
-                 VerticalAlignment="Center"
-                 KeyDown="TextBox_OnKeyDown" />
+        <Separator Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" DockPanel.Dock="Top" />
 
-        <Label Grid.Row="5" Grid.Column="0" Content="Scale:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Scale)}"
-                 VerticalAlignment="Center"
-                 KeyDown="TextBox_OnKeyDown" />
+        <Label Grid.Row="5" Grid.Column="0" Content="Name:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown" SourceUpdated="DriveName_OnSourceUpdated"
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Name), Mode=TwoWay, NotifyOnSourceUpdated=True}" />
 
-        <Label Grid.Row="6" Grid.Column="0" Content="Start angle:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.StartAngle)}"
-                 VerticalAlignment="Center"
-                 KeyDown="TextBox_OnKeyDown" />
+        <Label Grid.Row="6" Grid.Column="0" Content="Frequency:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown"
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Frequency), Mode=TwoWay}" />
 
-        <Label Grid.Row="7" Grid.Column="0" Content="Rotate CCW:" VerticalAlignment="Center" />
-        <CheckBox Grid.Row="7" Grid.Column="1" IsChecked="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.RotateCcw)}"
-                  VerticalAlignment="Center" />
+        <Label Grid.Row="7" Grid.Column="0" Content="Scale:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="7" Grid.Column="1" VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown"
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Scale), Mode=TwoWay}" />
+
+        <Label Grid.Row="8" Grid.Column="0" Content="Start angle:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="8" Grid.Column="1" VerticalAlignment="Center" KeyDown="TextBox_OnKeyDown"
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.StartAngle), Mode=TwoWay}" />
+
+        <Label Grid.Row="9" Grid.Column="0" Content="Rotate CCW:" VerticalAlignment="Center" />
+        <CheckBox Grid.Row="9" Grid.Column="1" VerticalAlignment="Center"
+                  IsChecked="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.RotateCcw), Mode=TwoWay}" />
       </Grid>
+
+      <Grid DockPanel.Dock="Bottom">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Button x:Name="LoadButton" Grid.Column="0" Content="Load" Click="LoadButton_OnClick" />
+        <Button x:Name="SaveButton" Grid.Column="1" Content="Save" Click="SaveButton_OnClick" />
+      </Grid>
+
+      <Separator DockPanel.Dock="Bottom" />
 
       <Button x:Name="ResetButton" DockPanel.Dock="Bottom" Content="Reset" Click="ResetButton_OnClick" />
 
@@ -84,7 +104,7 @@
         <Button x:Name="RemoveButton" Grid.Column="1" Content="Remove" IsEnabled="False" Click="RemoveButton_OnClick" />
       </Grid>
 
-      <ListView x:Name="DrivesList" ItemsSource="{Binding ElementName=SpirographWindow, Path=Trace.Drives}" SelectionMode="Single" />
+      <ListView x:Name="DrivesList" SelectionMode="Single" ItemsSource="{Binding ElementName=SpirographWindow, Path=Trace.Drives}" />
     </DockPanel>
   </Grid>
 </Window>
