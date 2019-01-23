@@ -65,9 +65,9 @@ namespace Spirograph
       set
       {
         _traceColor = value;
-        ColoredPolyline.Stroke = new SolidColorBrush(_traceColor);
-        GlowPolyline.Stroke = new SolidColorBrush(_traceColor * 0.5F);
-        CorePolyline.Stroke = new SolidColorBrush(_traceColor + Color.FromArgb(0, 192, 192, 192));
+        ((SolidColorBrush) ColoredPolyline.Stroke).Color = _traceColor;
+        ((SolidColorBrush) GlowPolyline.Stroke).Color = _traceColor * 0.5F;
+        ((SolidColorBrush) CorePolyline.Stroke).Color = _traceColor + Color.FromArgb(0, 192, 192, 192);
 
         OnPropertyChanged(nameof(TraceColor));
       }
@@ -88,6 +88,7 @@ namespace Spirograph
 
     public readonly Polyline GlowPolyline = new Polyline
     {
+      Stroke = new SolidColorBrush(),
       StrokeStartLineCap = PenLineCap.Round,
       StrokeEndLineCap = PenLineCap.Round,
       StrokeLineJoin = PenLineJoin.Round
@@ -95,6 +96,7 @@ namespace Spirograph
 
     public readonly Polyline ColoredPolyline = new Polyline
     {
+      Stroke = new SolidColorBrush(),
       StrokeStartLineCap = PenLineCap.Round,
       StrokeEndLineCap = PenLineCap.Round,
       StrokeLineJoin = PenLineJoin.Round
@@ -102,6 +104,7 @@ namespace Spirograph
 
     public readonly Polyline CorePolyline = new Polyline
     {
+      Stroke = new SolidColorBrush(),
       StrokeStartLineCap = PenLineCap.Round,
       StrokeEndLineCap = PenLineCap.Round,
       StrokeLineJoin = PenLineJoin.Round
@@ -126,10 +129,10 @@ namespace Spirograph
       TraceColor = Colors.Gold;
       ShowDriveCircles = false;
 
-      Drives.CollectionChanged += DrivesOnCollectionChanged;
+      Drives.CollectionChanged += Drives_OnCollectionChanged;
     }
 
-    private void DrivesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void Drives_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
       Reset();
 
@@ -180,29 +183,31 @@ namespace Spirograph
       PushTracePoint(tracePoint);
     }
 
-    public void SaveToFile(string fileName)
+    public void SaveToFile(string fileName, bool saveTraceSetup)
     {
-      var xmlFile = new XDocument(
-        new XDeclaration("1.0", "utf-8", null),
-        new XElement("spirograph-trace",
+      var xmlFile = new XDocument(new XDeclaration("1.0", "utf-8", null), new XElement("spirograph-trace"));
+
+      if (saveTraceSetup)
+      {
+        xmlFile.Root?.Add(
           new XElement("trace-length", TraceLength),
           new XElement("trace-thickness", TraceThickness),
           new XElement("trace-color", TraceColor),
-          new XElement("show-drive-circles", ShowDriveCircles)));
+          new XElement("show-drive-circles", ShowDriveCircles));
+      }
 
       var drivesElement = new XElement("drives");
       foreach (var drive in Drives)
       {
         drivesElement.Add(
           new XElement("drive",
-            new XElement("name", drive.Name),
             new XElement("frequency", drive.Frequency),
             new XElement("scale", drive.Scale),
             new XElement("start-angle", drive.StartAngle),
             new XElement("rotate-ccw", drive.RotateCcw)));
       }
-
       xmlFile.Root?.Add(drivesElement);
+
       xmlFile.Save(fileName);
     }
 
@@ -235,13 +240,11 @@ namespace Spirograph
       if (!(rootElement.Element("drives")?.HasElements ?? false))
         return;
 
-      Drives.CollectionChanged -= DrivesOnCollectionChanged;
-
+      Drives.CollectionChanged -= Drives_OnCollectionChanged;
       Drives.Clear();
       foreach (var driveElement in rootElement.Element("drives")?.Descendants("drive") ?? new XElement[0])
       {
         var drive = new SpirographDrive();
-        drive.Name = driveElement.Element("name")?.Value ?? drive.Name;
         drive.Frequency = (double.TryParse(driveElement.Element("frequency")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var frequency)
           ? frequency : drive.Frequency);
         drive.Scale = (double.TryParse(driveElement.Element("scale")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var scale)
@@ -253,14 +256,13 @@ namespace Spirograph
 
         Drives.Add(drive);
       }
-
-      DrivesOnCollectionChanged(this, null);
-      Drives.CollectionChanged += DrivesOnCollectionChanged;
+      Drives_OnCollectionChanged(this, null);
+      Drives.CollectionChanged += Drives_OnCollectionChanged;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

@@ -18,18 +18,6 @@ namespace Spirograph
 
     public readonly GeometryGroup DriveCircle = new GeometryGroup {Transform = new TransformGroup()};
 
-    private string _name = "";
-    public string Name
-    {
-      get => _name;
-      set
-      {
-        _name = value;
-
-        OnPropertyChanged(nameof(Name));
-      }
-    }
-
     private double _frequency = 1.0;
     public double Frequency
     {
@@ -117,11 +105,11 @@ namespace Spirograph
       Angle += 360.0 * Frequency * timeStep * (RotateCcw ? -1.0 : 1.0);
     }
 
-    public override string ToString() => !string.IsNullOrWhiteSpace(Name) ? Name.Trim() : "Spirograph drive";
+    public override string ToString() => $"Drive {Frequency}/{Scale}/{StartAngle}/" + (RotateCcw ? "CCW" : "CW");
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

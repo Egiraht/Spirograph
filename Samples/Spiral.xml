@@ -2,22 +2,28 @@
 <spirograph-trace>
   <drives>
     <drive>
-      <frequency>1.5</frequency>
+      <frequency>1</frequency>
       <scale>1</scale>
       <start-angle>0</start-angle>
       <rotate-ccw>false</rotate-ccw>
     </drive>
     <drive>
-      <frequency>2.5</frequency>
+      <frequency>1</frequency>
       <scale>1</scale>
       <start-angle>0</start-angle>
       <rotate-ccw>true</rotate-ccw>
     </drive>
     <drive>
-      <frequency>1.375</frequency>
-      <scale>2.75</scale>
-      <start-angle>0</start-angle>
+      <frequency>1</frequency>
+      <scale>1</scale>
+      <start-angle>180</start-angle>
       <rotate-ccw>false</rotate-ccw>
+    </drive>
+    <drive>
+      <frequency>0.97</frequency>
+      <scale>1</scale>
+      <start-angle>180</start-angle>
+      <rotate-ccw>true</rotate-ccw>
     </drive>
   </drives>
 </spirograph-trace>

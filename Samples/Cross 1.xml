@@ -1,26 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <spirograph-trace>
-  <trace-length>400</trace-length>
-  <trace-thickness>1</trace-thickness>
-  <trace-color>#FF0000FF</trace-color>
-  <show-drive-circles>false</show-drive-circles>
   <drives>
     <drive>
-      <name>Drive 1</name>
       <frequency>0.5</frequency>
       <scale>2</scale>
       <start-angle>0</start-angle>
       <rotate-ccw>false</rotate-ccw>
     </drive>
     <drive>
-      <name>Drive 2</name>
       <frequency>1.5</frequency>
       <scale>1.5</scale>
       <start-angle>0</start-angle>
       <rotate-ccw>true</rotate-ccw>
     </drive>
     <drive>
-      <name>Drive 3</name>
       <frequency>2.5</frequency>
       <scale>0.5</scale>
       <start-angle>0</start-angle>

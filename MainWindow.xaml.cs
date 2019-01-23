@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -14,10 +17,10 @@ namespace Spirograph
   /// </summary>
   public partial class MainWindow
   {
-    private static int _driveIndex = 1;
-    private static int DriveIndex => _driveIndex++;
+    private readonly string _startupFile =
+      Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spirograph", "Startup.xml");
 
-    private OpenFileDialog _openFileDialog = new OpenFileDialog
+    private readonly OpenFileDialog _openFileDialog = new OpenFileDialog
     {
       Title = "Load spirograph setup",
       Filter = "Spirograph setup file|*.xml",
@@ -31,7 +34,7 @@ namespace Spirograph
       ShowReadOnly = true
     };
 
-    private SaveFileDialog _saveFileDialog = new SaveFileDialog
+    private readonly SaveFileDialog _saveFileDialog = new SaveFileDialog
     {
       Title = "Load spirograph setup",
       Filter = "Spirograph setup file|*.xml",
@@ -53,9 +56,11 @@ namespace Spirograph
 
       InitializeComponent();
 
-      Trace.Drives.Add(new SpirographDrive {Name = $"Drive {DriveIndex}"});
+      Trace.Drives.CollectionChanged += TraceDrives_OnCollectionChanged;
+      Trace.Drives.Add(new SpirographDrive());
 
-      DrivesList.SelectedIndex = 0;
+      if (File.Exists(_startupFile))
+        Trace.LoadFromFile(_startupFile);
 
       Viewport.Children.Add(Trace.DriveCircles);
       Viewport.Children.Add(Trace.GlowPolyline);
@@ -79,12 +84,28 @@ namespace Spirograph
       Trace.Step(0.005);
     }
 
-    private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
+    private void ControlPanel_OnKeyDown(object sender, KeyEventArgs e)
     {
-      if (!(sender is TextBox) || e.Key != Key.Enter)
+      if (!(e.OriginalSource is TextBox) || e.Key != Key.Enter)
         return;
 
-      ((TextBox) sender).GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+      ((TextBox) e.OriginalSource).GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+    }
+
+    private void ControlPanel_OnSourceUpdated(object sender, DataTransferEventArgs e)
+    {
+      var index = DrivesList.SelectedIndex;
+      BindingOperations.ClearBinding(DrivesList, ItemsControl.ItemsSourceProperty);
+      BindingOperations.SetBinding(DrivesList, ItemsControl.ItemsSourceProperty, new Binding {Source = Trace.Drives});
+      DrivesList.SelectedIndex = index;
+    }
+
+    private void TraceDrives_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+      RemoveButton.IsEnabled = DrivesList.Items.Count > 1;
+
+      if (DrivesList.HasItems && DrivesList.SelectedIndex == -1)
+        DrivesList.SelectedIndex = 0;
     }
 
     private void AddButton_OnClick(object sender, RoutedEventArgs e)
@@ -93,7 +114,6 @@ namespace Spirograph
 
       Trace.Drives.Add(new SpirographDrive
       {
-        Name = $"Drive {DriveIndex}",
         Frequency = 0.1 + 0.1 * random.Next(10),
         StartAngle = 10.0 * random.Next(0, 36),
         Scale = 0.1 + 0.1 * random.Next(10),
@@ -101,8 +121,6 @@ namespace Spirograph
       });
 
       DrivesList.SelectedIndex = Trace.Drives.Count - 1;
-
-      RemoveButton.IsEnabled = true;
     }
 
     private void RemoveButton_OnClick(object sender, RoutedEventArgs e)
@@ -113,14 +131,17 @@ namespace Spirograph
       var index = DrivesList.SelectedIndex;
       Trace.Drives.RemoveAt(index);
       DrivesList.SelectedIndex = index < Trace.Drives.Count ? index : index - 1;
-
-      if (Trace.Drives.Count < 2)
-        RemoveButton.IsEnabled = false;
     }
 
     private void ResetButton_OnClick(object sender, RoutedEventArgs e)
     {
       Trace.Reset();
+    }
+
+    private void ClearButton_OnClick(object sender, RoutedEventArgs e)
+    {
+      Trace.Drives.Clear();
+      Trace.Drives.Add(new SpirographDrive());
     }
 
     private void LoadButton_OnClick(object sender, RoutedEventArgs e)
@@ -129,8 +150,6 @@ namespace Spirograph
         return;
 
       Trace.LoadFromFile(_openFileDialog.FileName);
-      DrivesList.SelectedIndex = 0;
-      RemoveButton.IsEnabled = Trace.Drives.Count >= 2;
     }
 
     private void SaveButton_OnClick(object sender, RoutedEventArgs e)
@@ -138,15 +157,16 @@ namespace Spirograph
       if (!(bool) _saveFileDialog.ShowDialog(this))
         return;
 
-      Trace.SaveToFile(_saveFileDialog.FileName);
+      Trace.SaveToFile(_saveFileDialog.FileName, false);
     }
 
-    private void DriveName_OnSourceUpdated(object sender, DataTransferEventArgs e)
+    private void MainWindow_OnClosing(object sender, CancelEventArgs e)
     {
-      var index = DrivesList.SelectedIndex;
-      BindingOperations.ClearBinding(DrivesList, ItemsControl.ItemsSourceProperty);
-      BindingOperations.SetBinding(DrivesList, ItemsControl.ItemsSourceProperty, new Binding {Source = Trace.Drives});
-      DrivesList.SelectedIndex = index;
+      // ReSharper disable once AssignNullToNotNullAttribute
+      if (!Directory.Exists(Path.GetDirectoryName(_startupFile)))
+        Directory.CreateDirectory(Path.GetDirectoryName(_startupFile));
+
+      Trace.SaveToFile(_startupFile, true);
     }
   }
 }

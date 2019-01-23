@@ -82,10 +82,11 @@
     <Content Include="Samples\7 petals.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Samples\Cross.xml">
+    <Content Include="Samples\Cross 2.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Samples\Propeller.xml">
+    <Content Include="Samples\Cross 1.xml" />
+    <Content Include="Samples\Spiral.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Samples\Square.xml">
