@@ -20,7 +20,7 @@
       <rotate-ccw>false</rotate-ccw>
     </drive>
     <drive>
-      <frequency>0.97</frequency>
+      <frequency>0.98</frequency>
       <scale>1</scale>
       <start-angle>180</start-angle>
       <rotate-ccw>true</rotate-ccw>

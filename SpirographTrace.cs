@@ -1,3 +1,10 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/ .
+ *
+ * Copyright (C) 2019 Maxim Yudin <stibiu@yandex.ru>.
+ */
+
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -15,6 +22,8 @@ namespace Spirograph
 {
   public class SpirographTrace : INotifyPropertyChanged
   {
+    private readonly PointCollection _points;
+
     public ObservableCollection<SpirographDrive> Drives { get; } = new ObservableCollection<SpirographDrive>();
 
     private double _traceDiameter = 100.0;
@@ -30,7 +39,7 @@ namespace Spirograph
       }
     }
 
-    private int _traceLength = 2000;
+    private int _traceLength = 1000;
     public int TraceLength
     {
       get => _traceLength;
@@ -51,7 +60,6 @@ namespace Spirograph
       {
         _traceThickness = value;
         ColoredPolyline.StrokeThickness = _traceThickness;
-        GlowPolyline.StrokeThickness = _traceThickness * 1.25;
         CorePolyline.StrokeThickness = _traceThickness * 0.4;
 
         OnPropertyChanged(nameof(TraceThickness));
@@ -66,7 +74,6 @@ namespace Spirograph
       {
         _traceColor = value;
         ((SolidColorBrush) ColoredPolyline.Stroke).Color = _traceColor;
-        ((SolidColorBrush) GlowPolyline.Stroke).Color = _traceColor * 0.5F;
         ((SolidColorBrush) CorePolyline.Stroke).Color = _traceColor + Color.FromArgb(0, 192, 192, 192);
 
         OnPropertyChanged(nameof(TraceColor));
@@ -85,14 +92,6 @@ namespace Spirograph
         OnPropertyChanged(nameof(ShowDriveCircles));
       }
     }
-
-    public readonly Polyline GlowPolyline = new Polyline
-    {
-      Stroke = new SolidColorBrush(),
-      StrokeStartLineCap = PenLineCap.Round,
-      StrokeEndLineCap = PenLineCap.Round,
-      StrokeLineJoin = PenLineJoin.Round
-    };
 
     public readonly Polyline ColoredPolyline = new Polyline
     {
@@ -122,8 +121,9 @@ namespace Spirograph
 
     public SpirographTrace()
     {
-      GlowPolyline.Points = ColoredPolyline.Points;
-      CorePolyline.Points = ColoredPolyline.Points;
+      _points = new PointCollection(_traceLength);
+      ColoredPolyline.Points = _points;
+      CorePolyline.Points = _points;
 
       TraceThickness = 1.0;
       TraceColor = Colors.Gold;
@@ -144,10 +144,13 @@ namespace Spirograph
 
     private void PushTracePoint(Point newPoint)
     {
-      ColoredPolyline.Points.Insert(0, newPoint);
+      if (_points.Count >= TraceLength)
+      {
+        for (var index = TraceLength - 1; index < _points.Count; index++)
+          _points.RemoveAt(index);
+      }
 
-      if (ColoredPolyline.Points.Count > TraceLength + 1)
-        ColoredPolyline.Points.RemoveAt(TraceLength + 1);
+      _points.Insert(0, newPoint);
     }
 
     public void Reset()

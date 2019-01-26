@@ -1,14 +1,21 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/ .
+ *
+ * Copyright (C) 2019 Maxim Yudin <stibiu@yandex.ru>.
+ */
+
+using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Win32;
-
 
 namespace Spirograph
 {
@@ -17,6 +24,8 @@ namespace Spirograph
   /// </summary>
   public partial class MainWindow
   {
+    private static readonly Version ProgramVersion = AssemblyName.GetAssemblyName(Assembly.GetExecutingAssembly().Location).Version;
+
     private readonly string _startupFile =
       Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spirograph", "Startup.xml");
 
@@ -56,6 +65,8 @@ namespace Spirograph
 
       InitializeComponent();
 
+      Title = $"Spirograph v{ProgramVersion.ToString(2)}";
+
       Trace.Drives.CollectionChanged += TraceDrives_OnCollectionChanged;
       Trace.Drives.Add(new SpirographDrive());
 
@@ -63,13 +74,12 @@ namespace Spirograph
         Trace.LoadFromFile(_startupFile);
 
       Viewport.Children.Add(Trace.DriveCircles);
-      Viewport.Children.Add(Trace.GlowPolyline);
       Viewport.Children.Add(Trace.ColoredPolyline);
       Viewport.Children.Add(Trace.CorePolyline);
 
       var timer = new DispatcherTimer();
-      timer.Interval = TimeSpan.FromMilliseconds(25);
-      timer.Tick += Timer_OnTick;
+      timer.Interval = TimeSpan.FromMilliseconds(20);
+      timer.Tick += (sender, args) => Trace.Step(0.01);
       timer.Start();
     }
 
@@ -77,11 +87,6 @@ namespace Spirograph
     {
       e.Handled = true;
       MessageBox.Show(e.Exception.Message, SpirographWindow.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-    }
-
-    private void Timer_OnTick(object sender, EventArgs e)
-    {
-      Trace.Step(0.005);
     }
 
     private void ControlPanel_OnKeyDown(object sender, KeyEventArgs e)

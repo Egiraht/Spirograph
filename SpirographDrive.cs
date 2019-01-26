@@ -1,5 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/ .
+ *
+ * Copyright (C) 2019 Maxim Yudin <stibiu@yandex.ru>.
+ */
+
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
@@ -105,7 +113,12 @@ namespace Spirograph
       Angle += 360.0 * Frequency * timeStep * (RotateCcw ? -1.0 : 1.0);
     }
 
-    public override string ToString() => $"Drive {Frequency}/{Scale}/{StartAngle}/" + (RotateCcw ? "CCW" : "CW");
+    public override string ToString()
+    {
+      return
+        $"Drive {Frequency.ToString(CultureInfo.InvariantCulture)}/{Scale.ToString(CultureInfo.InvariantCulture)}/{StartAngle.ToString(CultureInfo.InvariantCulture)}/" +
+        (RotateCcw ? "CCW" : "CW");
+    }
 
     public event PropertyChangedEventHandler PropertyChanged;
 

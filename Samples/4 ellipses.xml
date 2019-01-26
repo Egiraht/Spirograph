@@ -2,19 +2,19 @@
 <spirograph-trace>
   <drives>
     <drive>
-      <frequency>1.5</frequency>
+      <frequency>1</frequency>
       <scale>1</scale>
       <start-angle>180</start-angle>
       <rotate-ccw>false</rotate-ccw>
     </drive>
     <drive>
-      <frequency>3</frequency>
+      <frequency>2</frequency>
       <scale>3.9</scale>
       <start-angle>0</start-angle>
       <rotate-ccw>true</rotate-ccw>
     </drive>
     <drive>
-      <frequency>0.75</frequency>
+      <frequency>0.5</frequency>
       <scale>3.5</scale>
       <start-angle>0</start-angle>
       <rotate-ccw>true</rotate-ccw>
