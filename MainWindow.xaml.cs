@@ -77,9 +77,7 @@ namespace Spirograph
       Viewport.Children.Add(Trace.ColoredPolyline);
       Viewport.Children.Add(Trace.CorePolyline);
 
-      var timer = new DispatcherTimer();
-      timer.Interval = TimeSpan.FromMilliseconds(20);
-      timer.Tick += (sender, args) => Trace.Step(0.01);
+      var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(25), DispatcherPriority.Render, (sender, args) => Trace.Step(0.01), Dispatcher);
       timer.Start();
     }
 

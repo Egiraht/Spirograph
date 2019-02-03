@@ -121,7 +121,7 @@ namespace Spirograph
 
     public SpirographTrace()
     {
-      _points = new PointCollection(_traceLength);
+      _points = new PointCollection(_traceLength + 1);
       ColoredPolyline.Points = _points;
       CorePolyline.Points = _points;
 
@@ -144,9 +144,9 @@ namespace Spirograph
 
     private void PushTracePoint(Point newPoint)
     {
-      if (_points.Count >= TraceLength)
+      if (_points.Count > TraceLength)
       {
-        for (var index = TraceLength - 1; index < _points.Count; index++)
+        for (var index = TraceLength; index < _points.Count; index++)
           _points.RemoveAt(index);
       }
 
