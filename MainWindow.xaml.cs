@@ -57,34 +57,37 @@ namespace Spirograph
       OverwritePrompt = true
     };
 
-    public SpirographTrace Trace { get; } = new SpirographTrace();
+    public TraceModel Trace { get; } = new TraceModel();
 
     public MainWindow()
     {
-      Dispatcher.UnhandledException += Dispatcher_OnUnhandledException;
+      #if !DEBUG
+        Dispatcher.UnhandledException += Dispatcher_OnUnhandledException;
+      #endif
 
       InitializeComponent();
 
       Title = $"Spirograph v{ProgramVersion.ToString(2)}";
 
+      TraceViewport.Trace = Trace;
+
       Trace.Drives.CollectionChanged += TraceDrives_OnCollectionChanged;
-      Trace.Drives.Add(new SpirographDrive());
+      Trace.Drives.Add(new DriveModel());
 
       if (File.Exists(_startupFile))
         Trace.LoadFromFile(_startupFile);
-
-      Viewport.Children.Add(Trace.DriveCircles);
-      Viewport.Children.Add(Trace.ColoredPolyline);
-      Viewport.Children.Add(Trace.CorePolyline);
-
-      var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(25), DispatcherPriority.Render, (sender, args) => Trace.Step(0.01), Dispatcher);
-      timer.Start();
     }
 
     private void Dispatcher_OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
       e.Handled = true;
       MessageBox.Show(e.Exception.Message, SpirographWindow.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+
+    private void TraceViewportContainer_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+      TraceViewport.Width = ((FrameworkElement) TraceViewport.Parent).ActualWidth;
+      TraceViewport.Height = ((FrameworkElement) TraceViewport.Parent).ActualHeight;
     }
 
     private void ControlPanel_OnKeyDown(object sender, KeyEventArgs e)
@@ -115,11 +118,11 @@ namespace Spirograph
     {
       var random = new Random();
 
-      Trace.Drives.Add(new SpirographDrive
+      Trace.Drives.Add(new DriveModel
       {
-        Frequency = 0.1 + 0.1 * random.Next(10),
-        StartAngle = 10.0 * random.Next(0, 36),
-        Scale = 0.1 + 0.1 * random.Next(10),
+        Frequency = 0.1F + 0.1F * random.Next(10),
+        StartAngle = 10F * random.Next(0, 36),
+        Scale = 0.1F + 0.1F * random.Next(10),
         RotateCcw = random.Next(2) > 0
       });
 
@@ -144,7 +147,7 @@ namespace Spirograph
     private void ClearButton_OnClick(object sender, RoutedEventArgs e)
     {
       Trace.Drives.Clear();
-      Trace.Drives.Add(new SpirographDrive());
+      Trace.Drives.Add(new DriveModel());
     }
 
     private void LoadButton_OnClick(object sender, RoutedEventArgs e)
@@ -170,6 +173,8 @@ namespace Spirograph
         Directory.CreateDirectory(Path.GetDirectoryName(_startupFile));
 
       Trace.SaveToFile(_startupFile, true);
+
+      TraceViewport.Dispose();
     }
   }
 }

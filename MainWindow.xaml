@@ -18,16 +18,15 @@
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*" />
-      <ColumnDefinition Width="3" />
-      <ColumnDefinition Width="200" MaxWidth="200" />
+      <ColumnDefinition Width="2" />
+      <ColumnDefinition Width="200" />
     </Grid.ColumnDefinitions>
 
-    <Viewbox x:Name="ViewportContainer" Grid.Column="0" Stretch="Uniform" Margin="30">
-      <Canvas x:Name="Viewport" Background="Transparent" Width="{Binding ElementName=SpirographWindow, Path=Trace.TraceDiameter}"
-              Height="{Binding ElementName=SpirographWindow, Path=Trace.TraceDiameter}" />
-    </Viewbox>
+    <Grid x:Name="TraceViewportContainer" Grid.Column="0" SizeChanged="TraceViewportContainer_OnSizeChanged" >
+      <local:TraceRenderer x:Name="TraceViewport" Grid.Column="0" />
+    </Grid>
 
-    <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Gray" HorizontalAlignment="Stretch" />
+    <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" />
 
     <DockPanel x:Name="ControlPanel" Grid.Column="2" Background="Transparent" Margin="2" SourceUpdated="ControlPanel_OnSourceUpdated"
                KeyDown="ControlPanel_OnKeyDown">
@@ -69,22 +68,22 @@
 
         <Label Grid.Row="5" Grid.Column="0" Content="Frequency:" VerticalAlignment="Center" />
         <TextBox Grid.Row="5" Grid.Column="1" VerticalAlignment="Center"
-                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Frequency), Mode=TwoWay,
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.Frequency), Mode=TwoWay,
                  NotifyOnSourceUpdated=True}" />
 
         <Label Grid.Row="6" Grid.Column="0" Content="Scale:" VerticalAlignment="Center" />
         <TextBox Grid.Row="6" Grid.Column="1" VerticalAlignment="Center"
-                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.Scale), Mode=TwoWay,
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.Scale), Mode=TwoWay,
                  NotifyOnSourceUpdated=True}" />
 
         <Label Grid.Row="7" Grid.Column="0" Content="Start angle:" VerticalAlignment="Center" />
         <TextBox Grid.Row="7" Grid.Column="1" VerticalAlignment="Center"
-                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.StartAngle), Mode=TwoWay,
+                 Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.StartAngle), Mode=TwoWay,
                  NotifyOnSourceUpdated=True}" />
 
         <Label Grid.Row="8" Grid.Column="0" Content="Rotate CCW:" VerticalAlignment="Center" />
         <CheckBox Grid.Row="8" Grid.Column="1" VerticalAlignment="Center"
-                  IsChecked="{Binding ElementName=DrivesList, Path=SelectedItem.(local:SpirographDrive.RotateCcw), Mode=TwoWay,
+                  IsChecked="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.RotateCcw), Mode=TwoWay,
                   NotifyOnSourceUpdated=True}" />
       </Grid>
 

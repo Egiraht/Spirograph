@@ -12,34 +12,20 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using System.Xml.Linq;
-using Path = System.Windows.Shapes.Path;
+using Microsoft.Xna.Framework;
+using Color = System.Windows.Media.Color;
 
 namespace Spirograph
 {
-  public class SpirographTrace : INotifyPropertyChanged
+  public class TraceModel : INotifyPropertyChanged
   {
-    private readonly PointCollection _points;
+    public readonly Collection<Vector2> Points = new Collection<Vector2>();
 
-    public ObservableCollection<SpirographDrive> Drives { get; } = new ObservableCollection<SpirographDrive>();
+    public ObservableCollection<DriveModel> Drives { get; } = new ObservableCollection<DriveModel>();
 
-    private double _traceDiameter = 100.0;
-    public double TraceDiameter
-    {
-      get => _traceDiameter;
-      set
-      {
-        _traceDiameter = value;
-        Reset();
-
-        OnPropertyChanged(nameof(TraceDiameter));
-      }
-    }
-
-    private int _traceLength = 1000;
+    private int _traceLength = 200;
     public int TraceLength
     {
       get => _traceLength;
@@ -47,39 +33,33 @@ namespace Spirograph
       {
         _traceLength = value >= 1 ? value : 1;
         Reset();
-
         OnPropertyChanged(nameof(TraceLength));
       }
     }
 
-    private double _traceThickness;
-    public double TraceThickness
+    private float _traceThickness = 1F;
+    public float TraceThickness
     {
       get => _traceThickness;
       set
       {
         _traceThickness = value;
-        ColoredPolyline.StrokeThickness = _traceThickness;
-        CorePolyline.StrokeThickness = _traceThickness * 0.4;
-
         OnPropertyChanged(nameof(TraceThickness));
       }
     }
 
-    private Color _traceColor;
+    private Color _traceColor = Colors.Gold;
     public Color TraceColor
     {
       get => _traceColor;
       set
       {
         _traceColor = value;
-        ((SolidColorBrush) ColoredPolyline.Stroke).Color = _traceColor;
-        ((SolidColorBrush) CorePolyline.Stroke).Color = _traceColor + Color.FromArgb(0, 192, 192, 192);
-
         OnPropertyChanged(nameof(TraceColor));
       }
     }
 
+    // TODO: Return drive circles processing.
     private bool _showDriveCircles;
     public bool ShowDriveCircles
     {
@@ -87,100 +67,51 @@ namespace Spirograph
       set
       {
         _showDriveCircles = value;
-        DriveCircles.Visibility = _showDriveCircles ? Visibility.Visible : Visibility.Collapsed;
-
         OnPropertyChanged(nameof(ShowDriveCircles));
       }
     }
 
-    public readonly Polyline ColoredPolyline = new Polyline
+    public TraceModel()
     {
-      Stroke = new SolidColorBrush(),
-      StrokeStartLineCap = PenLineCap.Round,
-      StrokeEndLineCap = PenLineCap.Round,
-      StrokeLineJoin = PenLineJoin.Round
-    };
-
-    public readonly Polyline CorePolyline = new Polyline
-    {
-      Stroke = new SolidColorBrush(),
-      StrokeStartLineCap = PenLineCap.Round,
-      StrokeEndLineCap = PenLineCap.Round,
-      StrokeLineJoin = PenLineJoin.Round
-    };
-
-    public readonly Path DriveCircles = new Path()
-    {
-      Data = new GeometryGroup(),
-      Stroke = new SolidColorBrush(Colors.DimGray),
-      StrokeStartLineCap = PenLineCap.Round,
-      StrokeEndLineCap = PenLineCap.Round,
-      StrokeLineJoin = PenLineJoin.Round,
-      StrokeThickness = 0.2
-    };
-
-    public SpirographTrace()
-    {
-      _points = new PointCollection(_traceLength + 1);
-      ColoredPolyline.Points = _points;
-      CorePolyline.Points = _points;
-
-      TraceThickness = 1.0;
-      TraceColor = Colors.Gold;
-      ShowDriveCircles = false;
-
       Drives.CollectionChanged += Drives_OnCollectionChanged;
     }
 
     private void Drives_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
       Reset();
-
-      var driveCircles = (GeometryGroup) DriveCircles.Data;
-      driveCircles.Children.Clear();
-      foreach (var drive in Drives)
-        driveCircles.Children.Add(drive.DriveCircle);
     }
 
-    private void PushTracePoint(Point newPoint)
+    private void PushTracePoint(Vector2 newPoint)
     {
-      if (_points.Count > TraceLength)
+      if (Points.Count > TraceLength)
       {
-        for (var index = TraceLength; index < _points.Count; index++)
-          _points.RemoveAt(index);
+        for (var index = TraceLength; index < Points.Count; index++)
+          Points.RemoveAt(index);
       }
 
-      _points.Insert(0, newPoint);
+      Points.Insert(0, newPoint);
     }
 
     public void Reset()
     {
-      ColoredPolyline.Points.Clear();
+      Points.Clear();
 
       foreach (var drive in Drives)
         drive.Reset();
     }
 
-    public void Step(double timeStep)
+    public void Step(float timeStep)
     {
       if (Drives.Count == 0)
         return;
 
       var fullScale = Drives.Sum(drive => drive.Scale);
-      var tracePoint = new Point(_traceDiameter / 2, _traceDiameter / 2);
+      var tracePoint = Vector2.Zero;
 
       foreach (var drive in Drives)
       {
-        drive.DriveCircleOffset.X = tracePoint.X;
-        drive.DriveCircleOffset.Y = tracePoint.Y;
-        drive.DriveCircleScale.CenterX = tracePoint.X;
-        drive.DriveCircleScale.CenterY = tracePoint.Y;
-        drive.DriveCircleScale.ScaleX = (_traceDiameter / 2) / fullScale;
-        drive.DriveCircleScale.ScaleY = (_traceDiameter / 2) / fullScale;
-
         drive.Step(timeStep);
-
-        tracePoint += drive.OffsetVector * (_traceDiameter / 2) / fullScale;
+        tracePoint += drive.OffsetVector / fullScale;
       }
 
       PushTracePoint(tracePoint);
@@ -225,7 +156,7 @@ namespace Spirograph
 
       TraceLength = (int.TryParse(rootElement.Element("trace-length")?.Value, out var traceLength) ? traceLength : TraceLength);
       TraceThickness =
-        (double.TryParse(rootElement.Element("trace-thickness")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var traceThickness)
+        (float.TryParse(rootElement.Element("trace-thickness")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var traceThickness)
           ? traceThickness : TraceThickness);
 
       try
@@ -247,13 +178,13 @@ namespace Spirograph
       Drives.Clear();
       foreach (var driveElement in rootElement.Element("drives")?.Descendants("drive") ?? new XElement[0])
       {
-        var drive = new SpirographDrive();
-        drive.Frequency = (double.TryParse(driveElement.Element("frequency")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var frequency)
+        var drive = new DriveModel();
+        drive.Frequency = (float.TryParse(driveElement.Element("frequency")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var frequency)
           ? frequency : drive.Frequency);
-        drive.Scale = (double.TryParse(driveElement.Element("scale")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var scale)
+        drive.Scale = (float.TryParse(driveElement.Element("scale")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var scale)
           ? scale : drive.Scale);
         drive.StartAngle =
-          (double.TryParse(driveElement.Element("start-angle")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var startAngle)
+          (float.TryParse(driveElement.Element("start-angle")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var startAngle)
             ? startAngle : drive.StartAngle);
         drive.RotateCcw = (bool.TryParse(driveElement.Element("rotate-ccw")?.Value, out var rotateCcw) ? rotateCcw : drive.RotateCcw);
 
