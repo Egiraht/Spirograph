@@ -19,48 +19,70 @@ using Color = System.Windows.Media.Color;
 
 namespace Spirograph
 {
+  /// <summary>
+  /// Spirograph trace model class.
+  /// </summary>
   public class TraceModel : INotifyPropertyChanged
   {
+    private int _length = 500;
+    private float _thickness = 1F;
+    private Color _color = Colors.Gold;
+    private bool _showDriveCircles = false;
+    private bool _fading = true;
+
+    /// <summary>
+    /// Trace points queue.
+    /// </summary>
     public readonly Collection<Vector2> Points = new Collection<Vector2>();
 
+    /// <summary>
+    /// Drives collection.
+    /// </summary>
     public ObservableCollection<DriveModel> Drives { get; } = new ObservableCollection<DriveModel>();
 
-    private int _traceLength = 200;
-    public int TraceLength
+    /// <summary>
+    /// Maximal trace length in line segments.
+    /// </summary>
+    public int Length
     {
-      get => _traceLength;
+      get => _length;
       set
       {
-        _traceLength = value >= 1 ? value : 1;
+        _length = value >= 1 ? value : 1;
         Reset();
-        OnPropertyChanged(nameof(TraceLength));
+        OnPropertyChanged(nameof(Length));
       }
     }
 
-    private float _traceThickness = 1F;
-    public float TraceThickness
+    /// <summary>
+    /// Trace visual thickness.
+    /// </summary>
+    public float Thickness
     {
-      get => _traceThickness;
+      get => _thickness;
       set
       {
-        _traceThickness = value;
-        OnPropertyChanged(nameof(TraceThickness));
+        _thickness = value;
+        OnPropertyChanged(nameof(Thickness));
       }
     }
 
-    private Color _traceColor = Colors.Gold;
-    public Color TraceColor
+    /// <summary>
+    /// Trace color.
+    /// </summary>
+    public Color Color
     {
-      get => _traceColor;
+      get => _color;
       set
       {
-        _traceColor = value;
-        OnPropertyChanged(nameof(TraceColor));
+        _color = value;
+        OnPropertyChanged(nameof(Color));
       }
     }
 
-    // TODO: Return drive circles processing.
-    private bool _showDriveCircles;
+    /// <summary>
+    /// Flag that allows drawing of drive circles.
+    /// </summary>
     public bool ShowDriveCircles
     {
       get => _showDriveCircles;
@@ -71,27 +93,55 @@ namespace Spirograph
       }
     }
 
+    /// <summary>
+    /// Trace visual fading flag.
+    /// </summary>
+    public bool Fading
+    {
+      get => _fading;
+      set
+      {
+        _fading = value;
+        OnPropertyChanged(nameof(Fading));
+      }
+    }
+
+    /// <summary>
+    /// Trace model constructor.
+    /// </summary>
     public TraceModel()
     {
       Drives.CollectionChanged += Drives_OnCollectionChanged;
     }
 
+    /// <summary>
+    /// Callback for drives collection change event.
+    /// </summary>
+    /// <param name="sender">Event sender.</param>
+    /// <param name="e">Event arguments.</param>
     private void Drives_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
       Reset();
     }
 
+    /// <summary>
+    /// Pushes a new trace point into the queue and removes old points from its end.
+    /// </summary>
+    /// <param name="newPoint"></param>
     private void PushTracePoint(Vector2 newPoint)
     {
-      if (Points.Count > TraceLength)
+      if (Points.Count > Length)
       {
-        for (var index = TraceLength; index < Points.Count; index++)
+        for (var index = Length; index < Points.Count; index++)
           Points.RemoveAt(index);
       }
 
       Points.Insert(0, newPoint);
     }
 
+    /// <summary>
+    /// Resets the trace by cleaning the points queue and resetting the drives.
+    /// </summary>
     public void Reset()
     {
       Points.Clear();
@@ -100,6 +150,10 @@ namespace Spirograph
         drive.Reset();
     }
 
+    /// <summary>
+    /// Updates the trace to its state after <i>timeStep</i> seconds from current state.
+    /// </summary>
+    /// <param name="timeStep">Time step in seconds.</param>
     public void Step(float timeStep)
     {
       if (Drives.Count == 0)
@@ -117,19 +171,27 @@ namespace Spirograph
       PushTracePoint(tracePoint);
     }
 
+    /// <summary>
+    /// Saves current trace and/or drives setup to the XML file.
+    /// </summary>
+    /// <param name="fileName">Path to the XML file.</param>
+    /// <param name="saveTraceSetup">If <i>true</i> save also trace setup, otherwise save only drives setup.</param>
     public void SaveToFile(string fileName, bool saveTraceSetup)
     {
       var xmlFile = new XDocument(new XDeclaration("1.0", "utf-8", null), new XElement("spirograph-trace"));
 
+      // Saving trace setup if needed.
       if (saveTraceSetup)
       {
         xmlFile.Root?.Add(
-          new XElement("trace-length", TraceLength),
-          new XElement("trace-thickness", TraceThickness),
-          new XElement("trace-color", TraceColor),
+          new XElement("trace-length", Length),
+          new XElement("trace-thickness", Thickness),
+          new XElement("trace-color", Color),
+          new XElement("trace-fading", Fading),
           new XElement("show-drive-circles", ShowDriveCircles));
       }
 
+      // Saving drives setup.
       var drivesElement = new XElement("drives");
       foreach (var drive in Drives)
       {
@@ -145,6 +207,10 @@ namespace Spirograph
       xmlFile.Save(fileName);
     }
 
+    /// <summary>
+    /// Loads trace and drives setup from the XML file.
+    /// </summary>
+    /// <param name="fileName">Path to the XML file.</param>
     public void LoadFromFile(string fileName)
     {
       if (!File.Exists(fileName))
@@ -154,23 +220,28 @@ namespace Spirograph
       if (rootElement == null)
         return;
 
-      TraceLength = (int.TryParse(rootElement.Element("trace-length")?.Value, out var traceLength) ? traceLength : TraceLength);
-      TraceThickness =
+      // Loading trace setup.
+      Length = (int.TryParse(rootElement.Element("trace-length")?.Value, out var traceLength) ? traceLength : Length);
+      Thickness =
         (float.TryParse(rootElement.Element("trace-thickness")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var traceThickness)
-          ? traceThickness : TraceThickness);
+          ? traceThickness : Thickness);
 
       try
       {
-        TraceColor = (Color) (ColorConverter.ConvertFromString(rootElement.Element("trace-color")?.Value) ?? TraceColor);
+        Color = (Color) (ColorConverter.ConvertFromString(rootElement.Element("trace-color")?.Value) ?? Color);
       }
       catch
       {
          //
       }
 
+      Fading = (bool.TryParse(rootElement.Element("trace-fading")?.Value, out var traceFading)
+        ? traceFading : Fading);
+
       ShowDriveCircles = (bool.TryParse(rootElement.Element("show-drive-circles")?.Value, out var showDriveCircles)
         ? showDriveCircles : ShowDriveCircles);
 
+      // Loading drives setup.
       if (!(rootElement.Element("drives")?.HasElements ?? false))
         return;
 
@@ -194,8 +265,15 @@ namespace Spirograph
       Drives.CollectionChanged += Drives_OnCollectionChanged;
     }
 
+    /// <summary>
+    /// Event called on any property change.
+    /// </summary>
     public event PropertyChangedEventHandler PropertyChanged;
 
+    /// <summary>
+    /// Event caller routine.
+    /// </summary>
+    /// <param name="propertyName">Name of the changed property.</param>
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

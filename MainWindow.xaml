@@ -41,6 +41,7 @@
           <RowDefinition />
           <RowDefinition />
           <RowDefinition />
+          <RowDefinition />
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -49,40 +50,44 @@
         </Grid.ColumnDefinitions>
 
         <Label Grid.Row="0" Grid.Column="0" Content="Trace length:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceLength, Mode=TwoWay}"
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.Length, Mode=TwoWay}"
                  VerticalAlignment="Center" />
 
         <Label Grid.Row="1" Grid.Column="0" Content="Trace thickness:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceThickness, Mode=TwoWay}"
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.Thickness, Mode=TwoWay}"
                  VerticalAlignment="Center" />
 
         <Label Grid.Row="2" Grid.Column="0" Content="Trace color:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.TraceColor, Mode=TwoWay}"
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ElementName=SpirographWindow, Path=Trace.Color, Mode=TwoWay}"
                  VerticalAlignment="Center" />
 
-        <Label Grid.Row="3" Grid.Column="0" Content="Show drive circles:" VerticalAlignment="Center" />
-        <CheckBox Grid.Row="3" Grid.Column="1" IsChecked="{Binding ElementName=SpirographWindow, Path=Trace.ShowDriveCircles, Mode=TwoWay}"
+        <Label Grid.Row="3" Grid.Column="0" Content="Trace fading:" VerticalAlignment="Center" />
+        <CheckBox Grid.Row="3" Grid.Column="1" IsChecked="{Binding ElementName=SpirographWindow, Path=Trace.Fading, Mode=TwoWay}"
                   VerticalAlignment="Center" />
 
-        <Separator Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" DockPanel.Dock="Top" />
+        <Label Grid.Row="4" Grid.Column="0" Content="Show drive circles:" VerticalAlignment="Center" />
+        <CheckBox Grid.Row="4" Grid.Column="1" IsChecked="{Binding ElementName=SpirographWindow, Path=Trace.ShowDriveCircles, Mode=TwoWay}"
+                  VerticalAlignment="Center" />
 
-        <Label Grid.Row="5" Grid.Column="0" Content="Frequency:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="5" Grid.Column="1" VerticalAlignment="Center"
+        <Separator Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" DockPanel.Dock="Top" />
+
+        <Label Grid.Row="6" Grid.Column="0" Content="Frequency:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="6" Grid.Column="1" VerticalAlignment="Center"
                  Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.Frequency), Mode=TwoWay,
                  NotifyOnSourceUpdated=True}" />
 
-        <Label Grid.Row="6" Grid.Column="0" Content="Scale:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="6" Grid.Column="1" VerticalAlignment="Center"
+        <Label Grid.Row="7" Grid.Column="0" Content="Scale:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="7" Grid.Column="1" VerticalAlignment="Center"
                  Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.Scale), Mode=TwoWay,
                  NotifyOnSourceUpdated=True}" />
 
-        <Label Grid.Row="7" Grid.Column="0" Content="Start angle:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="7" Grid.Column="1" VerticalAlignment="Center"
+        <Label Grid.Row="8" Grid.Column="0" Content="Start angle:" VerticalAlignment="Center" />
+        <TextBox Grid.Row="8" Grid.Column="1" VerticalAlignment="Center"
                  Text="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.StartAngle), Mode=TwoWay,
                  NotifyOnSourceUpdated=True}" />
 
-        <Label Grid.Row="8" Grid.Column="0" Content="Rotate CCW:" VerticalAlignment="Center" />
-        <CheckBox Grid.Row="8" Grid.Column="1" VerticalAlignment="Center"
+        <Label Grid.Row="9" Grid.Column="0" Content="Rotate CCW:" VerticalAlignment="Center" />
+        <CheckBox Grid.Row="9" Grid.Column="1" VerticalAlignment="Center"
                   IsChecked="{Binding ElementName=DrivesList, Path=SelectedItem.(local:DriveModel.RotateCcw), Mode=TwoWay,
                   NotifyOnSourceUpdated=True}" />
       </Grid>

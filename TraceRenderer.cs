@@ -7,6 +7,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,18 +15,44 @@ using MonoGame.Framework.WpfInterop;
 
 namespace Spirograph
 {
+  /// <summary>
+  /// WPF control class for trace model rendering.
+  /// </summary>
   public class TraceRenderer : WpfGame, IDisposable
   {
+    /// <summary>
+    /// WPF graphics device.
+    /// </summary>
     private WpfGraphicsDeviceService _graphics;
 
+    /// <summary>
+    /// Sprite batch.
+    /// </summary>
     private SpriteBatch _spriteBatch;
 
-    private Texture2D _linePoint;
+    /// <summary>
+    /// Sprite for the trace rendering.
+    /// </summary>
+    private Texture2D _glowSprite;
 
+    /// <summary>
+    /// Sprite for simple lines rendering.
+    /// </summary>
+    private Texture2D _lineSprite;
+
+    /// <summary>
+    /// Trace state updater thread.
+    /// </summary>
     private Thread _traceUpdater;
 
+    /// <summary>
+    /// Trace model instance being rendered.
+    /// </summary>
     public TraceModel Trace;
 
+    /// <summary>
+    /// Graphics initialization callback.
+    /// </summary>
     protected override void Initialize()
     {
       _graphics = new WpfGraphicsDeviceService(this);
@@ -35,8 +62,8 @@ namespace Spirograph
       {
         while (Thread.CurrentThread.IsAlive)
         {
-          (context as SynchronizationContext)?.Post(state => Trace.Step(0.005F), null);
-          Thread.Sleep(5);
+          (context as SynchronizationContext)?.Post(state => Trace.Step(0.002F), null);
+          Thread.Sleep(2);
         }
       });
       _traceUpdater.Start(SynchronizationContext.Current);
@@ -44,39 +71,71 @@ namespace Spirograph
       base.Initialize();
     }
 
+    /// <summary>
+    /// Content loading callback.
+    /// </summary>
     protected override void LoadContent()
     {
       _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-      // TODO: Replace sprite with the new that is less square on scaling. Bind file name to the program's location.
-      _linePoint = Texture2D.FromStream(GraphicsDevice, new FileStream("Sprites/Glow.png", FileMode.Open));
+      _glowSprite = Texture2D.FromStream(GraphicsDevice, new FileStream("Sprites/Glow.png", FileMode.Open));
+
+      _lineSprite = new Texture2D(GraphicsDevice, 1, 1);
+      _lineSprite.SetData(new[] {Color.White});
 
       base.LoadContent();
     }
 
-    // TODO: Add constant trace brightness mode.
+    /// <summary>
+    /// Frame drawing cycle callback.
+    /// </summary>
+    /// <param name="gameTime"></param>
     protected override void Draw(GameTime gameTime)
     {
       GraphicsDevice.Clear(Color.Black);
 
-      if (Trace == null)
+      if (Trace == null || Trace.Points.Count == 0 || Trace.Drives.Count == 0)
         return;
 
-      var points = Trace.Points;
-      if (points.Count == 0)
-        return;
+      var viewportScale = (float) Math.Min(Width, Height) * 0.45F;
+      var traceColor = new Color(Trace.Color.R, Trace.Color.G, Trace.Color.B, Trace.Color.A);
 
-      _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive, SamplerState.AnisotropicClamp, DepthStencilState.Default,
+      // Drawing drive circles if needed.
+      if (Trace.ShowDriveCircles)
+      {
+        var drivesFullScale = Trace.Drives.Sum(drive => drive.Scale);
+        var driveCenter = Vector2.Zero;
+        var driveCircleColor = new Color(0.2F, 0.2F, 0.2F);
+
+        _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Opaque, SamplerState.AnisotropicWrap, DepthStencilState.Default,
+          RasterizerState.CullNone, null, Matrix.CreateTranslation(new Vector3((float) Width / 2F, (float) Height / 2F, 0F)));
+
+        foreach (var drive in Trace.Drives)
+        {
+          DrawCircle(_lineSprite, driveCenter, drive.Scale / drivesFullScale, driveCircleColor, 0.005F, viewportScale, 1F);
+
+          var drivePoint = driveCenter + drive.OffsetVector / drivesFullScale;
+          DrawLine(_lineSprite, driveCenter, drivePoint, driveCircleColor, 0.005F, viewportScale, 1F);
+
+          driveCenter = drivePoint;
+        }
+
+        _spriteBatch.End();
+      }
+
+      // Drawing trace.
+      _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive, SamplerState.AnisotropicWrap, DepthStencilState.Default,
         RasterizerState.CullNone, null, Matrix.CreateTranslation(new Vector3((float) Width / 2F, (float) Height / 2F, 0F)));
 
-      var color = new Color(Trace.TraceColor.R, Trace.TraceColor.G, Trace.TraceColor.B, Trace.TraceColor.A);
-      var scale = (float) Math.Min(Width, Height) * 0.45F;
-      for (var index = 0; index < points.Count - 1; index++)
+      for (var index = 0; index < Trace.Points.Count - 1; index++)
       {
-        DrawLine(new Vector2(points[index].X, points[index].Y), new Vector2(points[index + 1].X, points[index + 1].Y),
-          Trace.TraceThickness, scale, new Color(color, 1F - (1F * index / Trace.TraceLength)));
-        DrawLine(new Vector2(points[index].X, points[index].Y), new Vector2(points[index + 1].X, points[index + 1].Y),
-          Trace.TraceThickness / 2F, scale, new Color(Color.White, 0.25F - (0.25F * index / Trace.TraceLength)));
+        var start = new Vector2(Trace.Points[index].X, Trace.Points[index].Y);
+        var end = new Vector2(Trace.Points[index + 1].X, Trace.Points[index + 1].Y);
+        var mainColor = new Color(traceColor, (traceColor.A / 255F) * (Trace.Fading ? 1F - (1F * index / Trace.Length) : 1F));
+        var lightingColor = new Color(Color.Lerp(mainColor, Color.White, 0.5F), mainColor.A / 255F * 0.2F);
+
+        DrawLine(_glowSprite, start, end, mainColor, Trace.Thickness * 0.04F, viewportScale, 0F);
+        DrawLine(_glowSprite, start, end, lightingColor, Trace.Thickness * 0.03F, viewportScale, 0F);
       }
 
       _spriteBatch.End();
@@ -84,7 +143,17 @@ namespace Spirograph
       base.Draw(gameTime);
     }
 
-    private void DrawLine(Vector2 start, Vector2 end, float thickness, float scale, Color color)
+    /// <summary>
+    /// Draws a line using a textured trail.
+    /// </summary>
+    /// <param name="texture">The texture used for line drawing.</param>
+    /// <param name="start">Start vector of the line.</param>
+    /// <param name="end">End vector of the line.</param>
+    /// <param name="color">Color of the line.</param>
+    /// <param name="thickness">Visual thickness of the line in pixels.</param>
+    /// <param name="scale">Scaling factor of the line.</param>
+    /// <param name="depth">Virtual drawing depth.</param>
+    private void DrawLine(Texture2D texture, Vector2 start, Vector2 end, Color color, float thickness, float scale, float depth)
     {
       var lineVector = (end - start) * scale;
       var length = (float) Math.Ceiling(lineVector.Length());
@@ -92,18 +161,41 @@ namespace Spirograph
       var vector = start * scale;
       for (var step = 0; step < length; step++)
       {
-        _spriteBatch.Draw(_linePoint, vector, null, color, 0F, new Vector2(_linePoint.Width / 2F, _linePoint.Height / 2F),
-          new Vector2(thickness * scale / 50F / _linePoint.Width, thickness * scale / 50F / _linePoint.Height), SpriteEffects.None, 0F);
+        _spriteBatch.Draw(texture, vector, null, color, 0F, new Vector2(texture.Width / 2F, texture.Height / 2F),
+          new Vector2(thickness * scale / texture.Width, thickness * scale / texture.Height), SpriteEffects.None, depth);
 
         vector += lineStep;
       }
     }
 
+    /// <summary>
+    /// Draws a circle using a textured trail.
+    /// </summary>
+    /// <param name="texture">The texture used for line drawing.</param>
+    /// <param name="center">Vector of the circle's center.</param>
+    /// <param name="radius">Circle's radius.</param>
+    /// <param name="color">Color of the circle.</param>
+    /// <param name="thickness">Visual thickness of the circle's line in pixels.</param>
+    /// <param name="scale">Scaling factor of the circle.</param>
+    /// <param name="depth">Virtual drawing depth.</param>
+    private void DrawCircle(Texture2D texture, Vector2 center, float radius, Color color, float thickness, float scale, float depth)
+    {
+      for (var angle = 0F; angle < 360F; angle++)
+      {
+        var start = center +
+          new Vector2(radius * (float) Math.Cos(MathHelper.ToRadians(angle)), radius * (float) Math.Sin(MathHelper.ToRadians(angle)));
+        var end = center +
+          new Vector2(radius * (float) Math.Cos(MathHelper.ToRadians(angle + 1F)), radius * (float) Math.Sin(MathHelper.ToRadians(angle + 1F)));
+        DrawLine(texture, start, end, color, thickness, scale, depth);
+      }
+    }
+
+    /// <summary>
+    /// Stops the trace state updater thread.
+    /// </summary>
     public new void Dispose()
     {
       _traceUpdater.Abort();
-
-      base.Dispose();
     }
   }
 }
