@@ -107,7 +107,7 @@ namespace Spirograph
         var driveCenter = Vector2.Zero;
         var driveCircleColor = new Color(0.2F, 0.2F, 0.2F);
 
-        _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Opaque, SamplerState.AnisotropicWrap, DepthStencilState.Default,
+        _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Opaque, SamplerState.AnisotropicClamp, DepthStencilState.Default,
           RasterizerState.CullNone, null, Matrix.CreateTranslation(new Vector3((float) Width / 2F, (float) Height / 2F, 0F)));
 
         foreach (var drive in Trace.Drives)
@@ -124,7 +124,7 @@ namespace Spirograph
       }
 
       // Drawing trace.
-      _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive, SamplerState.AnisotropicWrap, DepthStencilState.Default,
+      _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive, SamplerState.AnisotropicClamp, DepthStencilState.Default,
         RasterizerState.CullNone, null, Matrix.CreateTranslation(new Vector3((float) Width / 2F, (float) Height / 2F, 0F)));
 
       for (var index = 0; index < Trace.Points.Count - 1; index++)
@@ -135,7 +135,7 @@ namespace Spirograph
         var lightingColor = new Color(Color.Lerp(mainColor, Color.White, 0.5F), mainColor.A / 255F * 0.2F);
 
         DrawLine(_glowSprite, start, end, mainColor, Trace.Thickness * 0.04F, viewportScale, 0F);
-        DrawLine(_glowSprite, start, end, lightingColor, Trace.Thickness * 0.03F, viewportScale, 0F);
+        DrawLine(_glowSprite, start, end, lightingColor, Trace.Thickness * 0.02F, viewportScale, 0F);
       }
 
       _spriteBatch.End();

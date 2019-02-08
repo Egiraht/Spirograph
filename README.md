@@ -26,6 +26,15 @@ Copyright (C) 2019 Maxim Yudin <<stibiu@yandex.ru>>
 
 Software license statement can be found in [LICENSE.txt](LICENSE.txt).
 
+References
+----------
+
+The program targets *Microsoft .NET Framework v4.6.2*
+
+It also uses the following Nuget packages and their dependencies:
+* MonoGame framework (https://www.nuget.org/packages/MonoGame.Framework.WpfInterop)
+* SharpDX (https://www.nuget.org/packages/SharpDX/)
+
 Links
 -----
 
