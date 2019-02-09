@@ -107,11 +107,6 @@ namespace Spirograph
     }
 
     /// <summary>
-    /// Sum of all drive scales.
-    /// </summary>
-    private float _fullScale;
-
-    /// <summary>
     /// Trace model constructor.
     /// </summary>
     public TraceModel()
@@ -126,7 +121,6 @@ namespace Spirograph
     /// <param name="e">Event arguments.</param>
     private void Drives_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-      _fullScale = Drives.Sum(drive => drive.Scale);
       Reset();
     }
 
@@ -165,11 +159,13 @@ namespace Spirograph
       if (Drives.Count == 0)
         return;
 
+      var fullScale = Drives.Sum(drive => drive.Scale);
       var tracePoint = Vector2.Zero;
+
       foreach (var drive in Drives)
       {
         drive.Step(timeStep);
-        tracePoint += drive.OffsetVector / _fullScale;
+        tracePoint += drive.OffsetVector / fullScale;
       }
 
       PushTracePoint(tracePoint);
